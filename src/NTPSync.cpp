@@ -8,12 +8,18 @@ bool NTPSync::_timeSyncked = false;
 uint32_t NTPSync::_syncInterval = 3600000;
 uint32_t NTPSync::_retryInterval = 300000;
 std::mutex NTPSync::_mutex;
+bool NTPSync::_logEnabled = true;
 
 // ----------------------------------------------------
 //
 //               Funções Públicas
 //
 // ----------------------------------------------------
+
+void NTPSync::logControl(bool enabled)
+{
+    _logEnabled = enabled;
+}
 
 /**
  * @brief Inicializa a classe NTPSync
@@ -55,7 +61,10 @@ bool NTPSync::syncTime(uint8_t maxRetries)
 
     if (WiFi.status() != WL_CONNECTED)
     {
-        Serial0.println("WiFi desconectado");
+        if (_logEnabled)
+        {
+            LOG_WARN("WiFi desconectado");
+        }
         _timeSyncked = false;
         return false;
     }
@@ -63,14 +72,20 @@ bool NTPSync::syncTime(uint8_t maxRetries)
     // Resolve todos os servidores uma vez
     if (!resolveAllServers())
     {
-        Serial0.println("Falha ao resolver servidores NTP");
+        if (_logEnabled)
+        {
+            LOG_WARN("Falha ao resolver servidores NTP");
+        }
         return false;
     }
 
     // Ordena servidores por performance
     sortServersByPerformance();
 
-    Serial0.println("Iniciando sincronização");
+    if (_logEnabled)
+    {
+        LOG_INFO("Iniciando sincronização");
+    }
 
     for (auto &server : _timeval.servers)
     {
@@ -78,8 +93,10 @@ bool NTPSync::syncTime(uint8_t maxRetries)
             continue;
         for (uint8_t attempt = 0; attempt < maxRetries; attempt++)
         {
-            Serial0.printf("Attempt %d with server: %s (%s)\n",
-                           attempt + 1, server.hostname.c_str(), server.ip.c_str());
+            if (_logEnabled)
+            {
+                LOG_INFO("Attempt %d with server: %s (%s)", attempt + 1, server.hostname.c_str(), server.ip.c_str());
+            }
 
             if (syncWithServer(server))
             {
@@ -96,7 +113,10 @@ bool NTPSync::syncTime(uint8_t maxRetries)
         }
     }
 
-    Serial0.println("Todos os servidores falharam");
+    if (_logEnabled)
+    {
+        LOG_ERROR("Todos os servidores falharam");
+    }
     _timeSyncked = false;
 
     return false;
@@ -227,18 +247,28 @@ bool NTPSync::resolveServer(NTPServer &server)
     if (server.resolved)
         return true;
 
-    Serial0.printf("Resolvendo %s...\n", server.hostname.c_str());
+    if (_logEnabled)
+    {
+        LOG_DEBUG("Resolvendo %s...", server.hostname.c_str());
+    }
+
     IPAddress ip;
     ip.fromString(server.ip);
     if (WiFi.hostByName(server.hostname.c_str(), ip))
     {
         server.resolved = true;
         server.ip = ip.toString();
-        Serial0.printf("Resolvido %s → %s\n", server.hostname.c_str(), server.ip.c_str());
+        if (_logEnabled)
+        {
+            LOG_DEBUG("Resolvido %s → %s", server.hostname.c_str(), server.ip.c_str());
+        }
         return true;
     }
 
-    Serial0.printf("Falha ao resolver %s\n", server.hostname);
+    if (_logEnabled)
+    {
+        LOG_ERROR("Falha ao resolver %s", server.hostname.c_str());
+    }
     return false;
 }
 
@@ -282,7 +312,10 @@ void NTPSync::loadTimeFromPrefs()
     {
         struct timeval tv = {.tv_sec = _timeval.lastSync};
         settimeofday(&tv, nullptr);
-        Serial0.printf("Hora carregada das preferências: %s", ctime(&_timeval.lastSync));
+        if (_logEnabled)
+        {
+            LOG_DEBUG("Hora carregada das preferências: %s", ctime(&_timeval.lastSync));
+        }
     }
 }
 
@@ -319,7 +352,10 @@ void NTPSync::startTask()
         1,
         nullptr,
         0);
-    Serial0.println("Tarefa de sincronização iniciada");
+    if (_logEnabled)
+    {
+        LOG_DEBUG("Tarefa de sincronização iniciada");
+    }
 }
 
 /**
@@ -347,15 +383,23 @@ bool NTPSync::syncWithServer(NTPServer &server)
     struct tm timeinfo;
     if (!getLocalTime(&timeinfo, 10000))
     { // Timeout de 10 segundos
-        Serial0.println("Failed to get time from NTP");
+        if (_logEnabled)
+        {
+            LOG_WARN("Failed to get time from NTP");
+        }
         return false;
     }
 
     time_t now = time(nullptr);
     server.lastResponseTime = millis() - (now - _timeval.lastSync) * 1000;
 
-    Serial0.println("Time synchronized successfully:");
-    Serial0.println(&timeinfo, "%d/%m/%Y %H:%M:%S");
+    if (_logEnabled)
+    {
+        char timeStr[64];
+        strftime(timeStr, sizeof(timeStr), "%d/%m/%Y %H:%M:%S", &timeinfo);
+        LOG_DEBUG("Time synchronized successfully: %s", timeStr);
+    }
+
     return true;
 }
 

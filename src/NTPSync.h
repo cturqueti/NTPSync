@@ -27,6 +27,7 @@ public:
     static uint32_t _syncInterval;
     static std::mutex _mutex;
 
+    static void logControl(bool enabled = true);
     static void begin(uint32_t syncInterval = 3600000, uint32_t retryInterval = 300000);
     static bool syncTime(uint8_t maxRetries = 3);
     static bool isTimeSynced();
@@ -57,6 +58,7 @@ private:
     static Preferences _prefs;
     static Timeval _timeval;
     static bool _timeSyncked;
+    static bool _logEnabled;
 
     static void sortServersByPerformance();
     static bool resolveAllServers();
