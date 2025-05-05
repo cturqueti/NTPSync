@@ -3,8 +3,9 @@
 
 // #include <LogLibrary.h>
 #include "utc.h"
+#include <ArduinoJson.h>
+#include <HTTPClient.h>
 #include <Preferences.h>
-
 #include <algorithm>
 #include <mutex>
 #include <vector>
@@ -65,6 +66,7 @@ private:
     static void sortServersByPerformance();
     static bool resolveAllServers();
     static bool resolveServer(NTPServer &server);
+    static bool resolveWithDoH(const String &hostname, IPAddress &ip);
     static void saveTimeToPrefs();
     static void loadTimeFromPrefs();
     static void updateDstStatus(time_t now);
