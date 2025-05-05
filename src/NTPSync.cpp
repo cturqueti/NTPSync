@@ -59,15 +59,7 @@ void NTPSync::begin(uint32_t syncInterval, uint32_t retryInterval)
 bool NTPSync::syncTime(uint8_t maxRetries)
 {
     std::lock_guard<std::mutex> lock(_mutex);
-    int attempt = 0;
-    int maxAttempt = maxRetries;
-    while (WiFi.status() != WL_CONNECTED && attempt < maxAttempt)
-    {
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-        attempt++;
-    }
-
-    if (attempt >= maxAttempt)
+    if (WiFi.status() != WL_CONNECTED)
     {
         if (_logEnabled)
         {
@@ -139,6 +131,12 @@ bool NTPSync::isTimeSynced()
 {
     std::lock_guard<std::mutex> lock(_mutex);
     return _timeSyncked;
+}
+
+bool NTPSync::hasTimeval()
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    return isTimeSynced() || _timeval.lastSync > 0;
 }
 
 time_t NTPSync::getLastTimeSync()
@@ -326,6 +324,7 @@ void NTPSync::loadTimeFromPrefs()
     {
         struct timeval tv = {.tv_sec = _timeval.lastSync};
         settimeofday(&tv, nullptr);
+
         if (_logEnabled)
         {
             Serial0.printf("Hora carregada das preferências: %s\n", ctime(&_timeval.lastSync));
