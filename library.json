@@ -19,10 +19,6 @@
     { 
       "name": "Preferences",
       "platforms": ["espressif32"]
-    },
-    {
-      "name": "WiFi",
-      "platforms": ["espressif32", "espressif8266"]
     }
   ],
   "repository": {
