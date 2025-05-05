@@ -30,8 +30,10 @@ public:
     static void begin(uint32_t syncInterval = 3600000, uint32_t retryInterval = 300000);
     static bool syncTime(uint8_t maxRetries = 3);
     static bool isTimeSynced();
+    static tm getTime();
 
-    static void setTimeval(const char *timezone, const std::vector<std::string> &ntpServers);
+    static void
+    setTimeval(const char *timezone, const std::vector<std::string> &ntpServers);
 
     static void setSyncIntervals(uint32_t syncInterval, uint32_t retryInterval);
 
@@ -54,6 +56,7 @@ private:
         time_t lastSync;                // Timestamp da última sincronização
     };
 
+    static tm _timeinfo;
     static Preferences _prefs;
     static Timeval _timeval;
     static bool _timeSyncked;

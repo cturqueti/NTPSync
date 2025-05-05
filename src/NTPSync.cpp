@@ -9,6 +9,7 @@ uint32_t NTPSync::_syncInterval = 3600000;
 uint32_t NTPSync::_retryInterval = 300000;
 std::mutex NTPSync::_mutex;
 bool NTPSync::_logEnabled = true;
+tm NTPSync::_timeinfo;
 
 // ----------------------------------------------------
 //
@@ -131,6 +132,12 @@ bool NTPSync::isTimeSynced()
 {
     std::lock_guard<std::mutex> lock(_mutex);
     return _timeSyncked;
+}
+
+tm NTPSync::getTime()
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    return _timeinfo;
 }
 
 /**
@@ -380,8 +387,7 @@ bool NTPSync::syncWithServer(NTPServer &server)
 {
     configTime(_timeval.utc_offset, 0, server.ip.c_str());
 
-    struct tm timeinfo;
-    if (!getLocalTime(&timeinfo, 10000))
+    if (!getLocalTime(&_timeinfo, 10000))
     { // Timeout de 10 segundos
         if (_logEnabled)
         {
@@ -396,7 +402,7 @@ bool NTPSync::syncWithServer(NTPServer &server)
     if (_logEnabled)
     {
         char timeStr[64];
-        strftime(timeStr, sizeof(timeStr), "%d/%m/%Y %H:%M:%S", &timeinfo);
+        strftime(timeStr, sizeof(timeStr), "%d/%m/%Y %H:%M:%S", &_timeinfo);
         Serial0.printf("Time synchronized successfully: %s\n", timeStr);
     }
 
