@@ -20,7 +20,7 @@ bool NTPSync::syncTime(uint8_t maxRetries)
 {
     if (WiFi.status() != WL_CONNECTED)
     {
-        Serial.println("WiFi desconectado");
+        Serial0.println("WiFi desconectado");
         _timeSyncked = false;
         return false;
     }
@@ -28,7 +28,7 @@ bool NTPSync::syncTime(uint8_t maxRetries)
     // Resolve todos os servidores uma vez
     if (!resolveAllServers())
     {
-        Serial.println("Falha ao resolver servidores NTP");
+        Serial0.println("Falha ao resolver servidores NTP");
         return false;
     }
 
@@ -43,7 +43,7 @@ bool NTPSync::syncTime(uint8_t maxRetries)
             if (!server.resolved)
                 continue;
 
-            Serial.printf("Tentando %s...\n", server.hostname);
+            Serial0.printf("Tentando %s...\n", server.hostname);
             if (queryNTP(server))
             {
                 _timeSyncked = true;
@@ -55,7 +55,7 @@ bool NTPSync::syncTime(uint8_t maxRetries)
         delay(1000); // Espera entre tentativas
     }
 
-    Serial.println("Todos os servidores falharam");
+    Serial0.println("Todos os servidores falharam");
     _timeSyncked = false;
     return false;
 }
@@ -83,31 +83,37 @@ bool NTPSync::queryNTP(NTPServer &server)
     WiFiUDP udp;
     if (!udp.begin(123))
     {
-        Serial.println("Falha ao iniciar UDP");
+        Serial0.println("Falha ao iniciar UDP");
         return false;
     }
 
     byte ntpPacket[48];
     memset(ntpPacket, 0, 48);
-    ntpPacket[0] = 0x1B; // Modo cliente NTP
+    ntpPacket[0] = 0xE3; // Modo cliente NTP
 
     uint32_t start = millis();
+
+    Serial0.printf("Enviando para %s (%s)...\n", server.hostname, server.ip.toString().c_str());
+
     if (!udp.beginPacket(server.ip, 123) || !udp.write(ntpPacket, 48) || !udp.endPacket())
     {
-        Serial.printf("Falha no envio para %s\n", server.hostname);
+        Serial0.printf("Falha no envio para %s\n", server.hostname);
         udp.stop();
         return false;
     }
 
+    Serial0.printf("Pacote enviado. Aguardando resposta...\n");
     // Espera resposta com timeout
     bool success = false;
     time_t ntpTime = 0;
 
-    while (millis() - start < 1000)
+    while (millis() - start < 9000)
     {
-        if (udp.parsePacket() >= 48)
+        if (udp.parsePacket() >= 1)
         {
             udp.read(ntpPacket, 48);
+            int packetSize = udp.parsePacket();
+            Serial0.printf("Tamanho do pacote recebido: %d\n", packetSize);
 
             if (isValidNTPResponse(ntpPacket, 48))
             {
@@ -139,13 +145,13 @@ bool NTPSync::queryNTP(NTPServer &server)
 
     if (success)
     {
-        Serial.printf("Sincronizado com %s em %ums (stratum %u)\n",
-                      server.hostname, server.lastResponseTime, server.stratum);
-        Serial.printf("Hora atual: %s", ctime(&ntpTime));
+        Serial0.printf("Sincronizado com %s em %ums (stratum %u)\n",
+                       server.hostname, server.lastResponseTime, server.stratum);
+        Serial0.printf("Hora atual: %s", ctime(&ntpTime));
         return true;
     }
 
-    Serial.printf("Timeout com %s\n", server.hostname);
+    Serial0.printf("Timeout com %s\n", server.hostname);
     return false;
 }
 
@@ -191,15 +197,15 @@ bool NTPSync::resolveServer(NTPServer &server)
     if (server.resolved)
         return true;
 
-    Serial.printf("Resolvendo %s...\n", server.hostname);
+    Serial0.printf("Resolvendo %s...\n", server.hostname);
     if (WiFi.hostByName(server.hostname, server.ip))
     {
         server.resolved = true;
-        Serial.printf("Resolvido %s → %s\n", server.hostname, server.ip.toString().c_str());
+        Serial0.printf("Resolvido %s → %s\n", server.hostname, server.ip.toString().c_str());
         return true;
     }
 
-    Serial.printf("Falha ao resolver %s\n", server.hostname);
+    Serial0.printf("Falha ao resolver %s\n", server.hostname);
     return false;
 }
 
@@ -222,7 +228,7 @@ void NTPSync::loadTimeFromPrefs()
     {
         struct timeval tv = {.tv_sec = _timeval.lastSync};
         settimeofday(&tv, nullptr);
-        Serial.printf("Hora carregada das preferências: %s", ctime(&_timeval.lastSync));
+        Serial0.printf("Hora carregada das preferências: %s", ctime(&_timeval.lastSync));
     }
 }
 
@@ -243,7 +249,7 @@ void NTPSync::startTask()
         1,
         nullptr,
         0);
-    Serial.println("Tarefa de sincronização iniciada");
+    Serial0.println("Tarefa de sincronização iniciada");
 }
 
 void timeSyncTask(void *param)

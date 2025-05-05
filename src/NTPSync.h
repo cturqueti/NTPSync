@@ -8,6 +8,21 @@
 #include <algorithm>
 #include <vector>
 
+//----------- Definição dos pinos para a serial alternativa (RX, TX) -------------------
+#ifndef UART_RX_PIN
+#define UART_RX_PIN 44
+#endif
+
+#ifndef UART_TX_PIN
+#define UART_TX_PIN 43
+#endif
+//--------------------------------------------------------------------------------------
+//---------------------- Velocidades de comunicação serial -----------------------------
+#ifndef MAIN_SERIAL_BAUDRATE
+#define MAIN_SERIAL_BAUDRATE 115200
+#endif
+//--------------------------------------------------------------------------------------
+
 struct NTPServer
 {
     const char *hostname;
