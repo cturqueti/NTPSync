@@ -3,7 +3,6 @@
 
 // #include <LogLibrary.h>
 #include "utc.h"
-#include <LogLibrary.h>
 #include <Preferences.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
