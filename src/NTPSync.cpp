@@ -134,10 +134,10 @@ bool NTPSync::isTimeSynced()
     return _timeSyncked;
 }
 
-tm NTPSync::getTime()
+time_t NTPSync::getLastTimeSync()
 {
     std::lock_guard<std::mutex> lock(_mutex);
-    return _timeinfo;
+    return _timeval.lastSync;
 }
 
 /**

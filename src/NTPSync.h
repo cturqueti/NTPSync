@@ -30,7 +30,7 @@ public:
     static void begin(uint32_t syncInterval = 3600000, uint32_t retryInterval = 300000);
     static bool syncTime(uint8_t maxRetries = 3);
     static bool isTimeSynced();
-    static tm getTime();
+    static time_t getLastTimeSync();
 
     static void
     setTimeval(const char *timezone, const std::vector<std::string> &ntpServers);
