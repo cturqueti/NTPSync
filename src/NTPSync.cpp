@@ -35,6 +35,8 @@ bool NTPSync::syncTime(uint8_t maxRetries)
     // Ordena servidores por performance
     sortServersByPerformance();
 
+    Serial0.println("Iniciando sincronização");
+
     // Tenta cada servidor
     for (uint8_t attempt = 0; attempt < maxRetries; attempt++)
     {
@@ -43,14 +45,33 @@ bool NTPSync::syncTime(uint8_t maxRetries)
             if (!server.resolved)
                 continue;
 
-            Serial0.printf("Tentando %s...\n", server.hostname);
-            if (queryNTP(server))
+            Serial0.printf("Tentando: %s, IP: %s\n", server.hostname, server.ip.c_str());
+            configTime(_timeval.utc_offset, 0, server.ip.c_str());
+            Serial0.println("Solicitando hora NTP...");
+            struct tm timeinfo;
+            if (!getLocalTime(&timeinfo))
+            {
+                Serial0.println("Falha ao obter hora.");
+                return false;
+            }
+            else
             {
                 _timeSyncked = true;
                 _timeval.lastSync = time(nullptr);
                 saveTimeToPrefs();
-                return true;
             }
+
+            Serial0.println("Hora atual:");
+            Serial0.println(&timeinfo, "%d/%m/%Y %H:%M:%S");
+            return true;
+
+            // if (queryNTP(server))
+            // {
+            //     _timeSyncked = true;
+            //     _timeval.lastSync = time(nullptr);
+            //     saveTimeToPrefs();
+            //     return true;
+            // }
         }
         delay(1000); // Espera entre tentativas
     }
@@ -65,103 +86,17 @@ void NTPSync::setTimeval(const char *timezone, int32_t utc_offset,
                          const char *ntpServer3)
 {
     _timeval.time_zone = timezone;
-    _timeval.utc_offset = utc_offset;
+    _timeval.utc_offset = utc_offset * 3600;
     _timeval.servers.clear();
 
     if (ntpServer1)
-        _timeval.servers.push_back({ntpServer1, INADDR_NONE, false, 1000, 0});
+        _timeval.servers.push_back({ntpServer1, "", false, 1000, 0});
     if (ntpServer2)
-        _timeval.servers.push_back({ntpServer2, INADDR_NONE, false, 1000, 0});
+        _timeval.servers.push_back({ntpServer2, "", false, 1000, 0});
     if (ntpServer3)
-        _timeval.servers.push_back({ntpServer3, INADDR_NONE, false, 1000, 0});
+        _timeval.servers.push_back({ntpServer3, "", false, 1000, 0});
 
-    updateDstStatus(time(nullptr));
-}
-
-bool NTPSync::queryNTP(NTPServer &server)
-{
-    WiFiUDP udp;
-    if (!udp.begin(123))
-    {
-        Serial0.println("Falha ao iniciar UDP");
-        return false;
-    }
-
-    byte ntpPacket[48];
-    memset(ntpPacket, 0, 48);
-    ntpPacket[0] = 0xE3; // Modo cliente NTP
-
-    uint32_t start = millis();
-
-    Serial0.printf("Enviando para %s (%s)...\n", server.hostname, server.ip.toString().c_str());
-
-    if (!udp.beginPacket(server.ip, 123) || !udp.write(ntpPacket, 48) || !udp.endPacket())
-    {
-        Serial0.printf("Falha no envio para %s\n", server.hostname);
-        udp.stop();
-        return false;
-    }
-
-    Serial0.printf("Pacote enviado. Aguardando resposta...\n");
-    // Espera resposta com timeout
-    bool success = false;
-    time_t ntpTime = 0;
-
-    while (millis() - start < 9000)
-    {
-        if (udp.parsePacket() >= 1)
-        {
-            udp.read(ntpPacket, 48);
-            int packetSize = udp.parsePacket();
-            Serial0.printf("Tamanho do pacote recebido: %d\n", packetSize);
-
-            if (isValidNTPResponse(ntpPacket, 48))
-            {
-                server.lastResponseTime = millis() - start;
-                server.stratum = ntpPacket[1]; // Nível de stratum do servidor
-
-                // Extrai o timestamp (posições 40-43)
-                uint32_t secsSince1900 = (uint32_t)ntpPacket[40] << 24 |
-                                         (uint32_t)ntpPacket[41] << 16 |
-                                         (uint32_t)ntpPacket[42] << 8 |
-                                         (uint32_t)ntpPacket[43];
-                ntpTime = secsSince1900 - 2208988800UL;
-
-                // Aplica offset e horário de verão
-                ntpTime += _timeval.utc_offset;
-                if (_timeval.dst_active)
-                    ntpTime += 3600;
-
-                struct timeval tv = {.tv_sec = ntpTime};
-                settimeofday(&tv, nullptr);
-                success = true;
-            }
-            break;
-        }
-        delay(10);
-    }
-
-    udp.stop();
-
-    if (success)
-    {
-        Serial0.printf("Sincronizado com %s em %ums (stratum %u)\n",
-                       server.hostname, server.lastResponseTime, server.stratum);
-        Serial0.printf("Hora atual: %s", ctime(&ntpTime));
-        return true;
-    }
-
-    Serial0.printf("Timeout com %s\n", server.hostname);
-    return false;
-}
-
-bool NTPSync::isValidNTPResponse(const byte *packet, size_t length)
-{
-    if (length < 48)
-        return false;
-    // Verifica bits de modo e stratum
-    return (packet[0] & 0x07) == 0x04 &&    // Modo servidor (4)
-           packet[1] > 0 && packet[1] < 16; // Stratum válido (1-15)
+    // updateDstStatus(time(nullptr));
 }
 
 void NTPSync::sortServersByPerformance()
@@ -198,10 +133,13 @@ bool NTPSync::resolveServer(NTPServer &server)
         return true;
 
     Serial0.printf("Resolvendo %s...\n", server.hostname);
-    if (WiFi.hostByName(server.hostname, server.ip))
+    IPAddress ip;
+    ip.fromString(server.ip);
+    if (WiFi.hostByName(server.hostname, ip))
     {
         server.resolved = true;
-        Serial0.printf("Resolvido %s → %s\n", server.hostname, server.ip.toString().c_str());
+        server.ip = ip.toString();
+        Serial0.printf("Resolvido %s → %s\n", server.hostname, server.ip.c_str());
         return true;
     }
 
@@ -221,7 +159,7 @@ void NTPSync::loadTimeFromPrefs()
 {
     _prefs.begin("ntp", true);
     _timeval.lastSync = _prefs.getULong("lastSync", 0);
-    _timeval.utc_offset = _prefs.getInt("utcOffset", -10800); // Default UTC-3
+    _timeval.utc_offset = _prefs.getInt("utcOffset", _timeval.utc_offset); // Default UTC-3
     _prefs.end();
 
     if (_timeval.lastSync > 0)

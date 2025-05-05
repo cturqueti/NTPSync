@@ -26,7 +26,7 @@
 struct NTPServer
 {
     const char *hostname;
-    IPAddress ip;
+    String ip;
     bool resolved;
     uint32_t lastResponseTime;
     uint8_t stratum; // Qualidade do servidor (0-15)
