@@ -59,12 +59,19 @@ void NTPSync::begin(uint32_t syncInterval, uint32_t retryInterval)
 bool NTPSync::syncTime(uint8_t maxRetries)
 {
     std::lock_guard<std::mutex> lock(_mutex);
+    int attempt = 0;
+    int maxAttempt = maxRetries;
+    while (WiFi.status() != WL_CONNECTED && attempt < maxAttempt)
+    {
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        attempt++;
+    }
 
-    if (WiFi.status() != WL_CONNECTED)
+    if (attempt >= maxAttempt)
     {
         if (_logEnabled)
         {
-            Serial0.printf("WiFi desconectado\n");
+            Serial0.printf("[NTP Sync] WiFi desconectado\n");
         }
         _timeSyncked = false;
         return false;
