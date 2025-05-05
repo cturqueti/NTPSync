@@ -1,8 +1,8 @@
 {
-  "name": "LogLibrary",
-  "version": "1.0.2",
-  "description": "Biblioteca de logging com níveis de log e suporte a cores ANSI",
-  "keywords": ["log", "debug", "serial", "arduino"],
+  "name": "NTPSync",
+  "version": "1.0.0",
+  "description": "Advanced NTP time synchronization library for ESP32 with timezone support, automatic retries and persistent storage",
+  "keywords": "ntp, time, sync, esp32, timezone, wifi, synchronization",
   "authors": [
     {
       "name": "Carlos Augusto D'Orazio Turqueti",
@@ -12,22 +12,24 @@
   ],
   "frameworks": "arduino",
   "platforms": [
-    "atmelavr",  
     "espressif32",  
-    "espressif8266",  
-    "sam",  
-    "ststm32"  
+    "espressif8266"
   ],
-  "dependencies": {},
+  "dependencies": [
+    { 
+      "name": "Preferences",
+      "platforms": ["espressif32"]
+    },
+    {
+      "name": "WiFi",
+      "platforms": ["espressif32", "espressif8266"]
+    }
+  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/cturqueti/LogLibrary.git"
+    "url": "https://github.com/seu-usuario/NTPSync.git"
   },
   "license": "Apache-2.0",
-  "homepage": "https://github.com/cturqueti/LogLibrary",
-  "examples": [
-    "examples/BasicLog",
-    "examples/ColoredLogs",
-    "examples/CustomOutput"
-  ]
+  "homepage": "https://github.com/seu-usuario/NTPSync",
+  "examples": []
 }
