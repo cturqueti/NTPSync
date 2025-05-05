@@ -266,7 +266,6 @@ bool NTPSync::resolveServer(NTPServer &server)
     }
 
     IPAddress ip;
-    ip.fromString(server.ip);
     if (WiFi.hostByName(server.hostname.c_str(), ip))
     {
         server.resolved = true;
