@@ -263,25 +263,28 @@ bool NTPSync::resolveServer(NTPServer &server)
     if (_logEnabled)
     {
         Serial0.printf("Resolvendo %s...\n", server.hostname.c_str());
+        Serial0.printf("DNS atual: %s\n", WiFi.dnsIP().toString().c_str());
     }
 
     IPAddress ip;
-    if (WiFi.hostByName(server.hostname.c_str(), ip))
+    if (!WiFi.hostByName(server.hostname.c_str(), ip) || ip == IPAddress(0, 0, 0, 0))
     {
-        server.resolved = true;
-        server.ip = ip.toString();
         if (_logEnabled)
         {
-            Serial0.printf("Resolvido %s → %s\n", server.hostname.c_str(), server.ip.c_str());
+            Serial0.printf("Falha ao resolver %s\n", server.hostname.c_str());
         }
-        return true;
+        return false;
     }
+
+    server.resolved = true;
+    server.ip = ip.toString();
 
     if (_logEnabled)
     {
-        Serial0.printf("Falha ao resolver %s\n", server.hostname.c_str());
+        Serial0.printf("Resolvido %s → %s\n", server.hostname.c_str(), server.ip.c_str());
     }
-    return false;
+
+    return true;
 }
 
 /**
