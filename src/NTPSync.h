@@ -66,7 +66,6 @@ private:
     static void sortServersByPerformance();
     static bool resolveAllServers();
     static bool resolveServer(NTPServer &server);
-    static bool resolveWithDoH(const String &hostname, IPAddress &ip);
     static void saveTimeToPrefs();
     static void loadTimeFromPrefs();
     static void updateDstStatus(time_t now);
