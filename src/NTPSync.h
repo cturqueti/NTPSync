@@ -3,6 +3,7 @@
 
 // #include <LogLibrary.h>
 #include "utc.h"
+#include <LogLibrary.h>
 #include <Preferences.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
@@ -10,28 +11,13 @@
 #include <mutex>
 #include <vector>
 
-//----------- Definição dos pinos para a serial alternativa (RX, TX) -------------------
-#ifndef UART_RX_PIN
-#define UART_RX_PIN 44
-#endif
-
-#ifndef UART_TX_PIN
-#define UART_TX_PIN 43
-#endif
-//--------------------------------------------------------------------------------------
-//---------------------- Velocidades de comunicação serial -----------------------------
-#ifndef MAIN_SERIAL_BAUDRATE
-#define MAIN_SERIAL_BAUDRATE 115200
-#endif
-//--------------------------------------------------------------------------------------
-
 constexpr uint32_t MINUTES_TO_MS = 60000;
 
 /**
  * @brief Classe para sincronização de tempo via NTP com persistência e fallback
  *
  * Exemplo de uso:
- * NTPSync::setTimeval("America/Sao_Paulo", -3, "pool.ntp.org", "br.pool.ntp.org");
+ * NTPSync::setTimeval("America/Sao_Paulo",{"pool.ntp.org", "br.pool.ntp.org"});
  * NTPSync::begin();
  */
 class NTPSync
