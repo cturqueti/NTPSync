@@ -322,13 +322,7 @@ void NTPSync::loadTimeFromPrefs()
 
     if (_timeval.lastSync > 0)
     {
-        // time_t localTime = _timeval.lastSync + _timeval.utc_offset;
-        time_t localTime = _timeval.lastSync;
-
-        struct timeval tv = {
-            .tv_sec = localTime, // Já com o offset aplicado
-            .tv_usec = 0};
-
+        struct timeval tv = {.tv_sec = _timeval.lastSync};
         settimeofday(&tv, nullptr);
 
         if (_logEnabled)
