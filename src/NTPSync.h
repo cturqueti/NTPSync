@@ -3,7 +3,6 @@
 
 // #include <LogLibrary.h>
 #include "utc.h"
-#include <ArduinoJson.h>
 #include <HTTPClient.h>
 #include <Preferences.h>
 #include <algorithm>
