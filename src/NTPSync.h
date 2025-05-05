@@ -70,5 +70,5 @@ private:
     static bool syncWithServer(NTPServer &server);
     static time_t getExponentialBackoffDelay(uint32_t failureCount);
 };
-void timeSyncTask(void *pvParameters);
+void timeSyncTaskNTP(void *pvParameters);
 #endif // NTP_SYNC_H

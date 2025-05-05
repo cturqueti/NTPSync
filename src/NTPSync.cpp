@@ -345,8 +345,8 @@ void NTPSync::updateDstStatus(time_t now)
 void NTPSync::startTask()
 {
     xTaskCreatePinnedToCore(
-        timeSyncTask,
-        "TimeSyncTask",
+        timeSyncTaskNTP,
+        "TimeSyncTaskNTP",
         4096,
         nullptr,
         1,
@@ -418,7 +418,7 @@ time_t NTPSync::getExponentialBackoffDelay(uint32_t failureCount)
     return min(delay, maxDelay);
 }
 
-void timeSyncTask(void *param)
+void timeSyncTaskNTP(void *param)
 {
     while (true)
     {
