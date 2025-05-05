@@ -1,5 +1,6 @@
 #include "NTPSync.h"
 #include <Arduino.h>
+#include <WiFi.h>
 #include <memory>
 
 Preferences NTPSync::_prefs;

@@ -4,8 +4,7 @@
 // #include <LogLibrary.h>
 #include "utc.h"
 #include <Preferences.h>
-#include <WiFi.h>
-#include <WiFiUdp.h>
+
 #include <algorithm>
 #include <mutex>
 #include <vector>
