@@ -268,7 +268,7 @@ bool NTPSync::resolveServer(NTPServer &server)
 
     IPAddress ip;
     WiFi.setDNS("8.8.8.8", "8.8.4.4");
-    if (!WiFi.hostByName(server.hostname.c_str(), ip) || ip == IPAddress(0, 0, 0, 0))
+    WiFi.config() if (!WiFi.hostByName(server.hostname.c_str(), ip) || ip == IPAddress(0, 0, 0, 0))
     {
         if (_logEnabled)
         {
