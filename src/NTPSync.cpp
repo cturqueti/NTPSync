@@ -64,7 +64,7 @@ bool NTPSync::syncTime(uint8_t maxRetries)
     {
         if (_logEnabled)
         {
-            Serial0.printf("[NTP Sync] WiFi desconectado\n");
+            // Serial0.printf("[NTP Sync] WiFi desconectado\n");
         }
         _timeSyncked = false;
         return false;
@@ -75,7 +75,7 @@ bool NTPSync::syncTime(uint8_t maxRetries)
     {
         if (_logEnabled)
         {
-            Serial0.printf("Falha ao resolver servidores NTP\n");
+            // Serial0.printf("Falha ao resolver servidores NTP\n");
         }
         return false;
     }
@@ -85,7 +85,7 @@ bool NTPSync::syncTime(uint8_t maxRetries)
 
     if (_logEnabled)
     {
-        Serial0.printf("Iniciando sincronização\n");
+        // Serial0.printf("Iniciando sincronização\n");
     }
 
     for (auto &server : _timeval.servers)
@@ -96,7 +96,7 @@ bool NTPSync::syncTime(uint8_t maxRetries)
         {
             if (_logEnabled)
             {
-                Serial0.printf("Attempt %d with server: %s (%s)\n", attempt + 1, server.hostname.c_str(), server.ip.c_str());
+                // Serial0.printf("Attempt %d with server: %s (%s)\n", attempt + 1, server.hostname.c_str(), server.ip.c_str());
             }
 
             if (syncWithServer(server))
@@ -116,7 +116,7 @@ bool NTPSync::syncTime(uint8_t maxRetries)
 
     if (_logEnabled)
     {
-        Serial0.printf("Todos os servidores falharam\n");
+        // Serial0.printf("Todos os servidores falharam\n");
     }
     _timeSyncked = false;
 
@@ -262,17 +262,17 @@ bool NTPSync::resolveServer(NTPServer &server)
 
     if (_logEnabled)
     {
-        Serial0.printf("Resolvendo %s...\n", server.hostname.c_str());
-        Serial0.printf("DNS atual: %s\n", WiFi.dnsIP().toString().c_str());
+        // Serial0.printf("Resolvendo %s...\n", server.hostname.c_str());
+        // Serial0.printf("DNS atual: %s\n", WiFi.dnsIP().toString().c_str());
     }
 
     IPAddress ip;
-    WiFi.setDNS("8.8.8.8", "8.8.4.4");
+    // WiFi.setDNS("8.8.8.8", "8.8.4.4");
     if (!WiFi.hostByName(server.hostname.c_str(), ip) || ip == IPAddress(0, 0, 0, 0))
     {
         if (_logEnabled)
         {
-            Serial0.printf("Falha ao resolver %s\n", server.hostname.c_str());
+            // Serial0.printf("Falha ao resolver %s\n", server.hostname.c_str());
         }
         return false;
     }
@@ -282,7 +282,7 @@ bool NTPSync::resolveServer(NTPServer &server)
 
     if (_logEnabled)
     {
-        Serial0.printf("Resolvido %s → %s\n", server.hostname.c_str(), server.ip.c_str());
+        // Serial0.printf("Resolvido %s → %s\n", server.hostname.c_str(), server.ip.c_str());
     }
 
     return true;
@@ -331,7 +331,7 @@ void NTPSync::loadTimeFromPrefs()
 
         if (_logEnabled)
         {
-            Serial0.printf("Hora carregada das preferências: %s\n", ctime(&_timeval.lastSync));
+            // Serial0.printf("Hora carregada das preferências: %s\n", ctime(&_timeval.lastSync));
         }
     }
 }
@@ -371,7 +371,7 @@ void NTPSync::startTask()
         0);
     if (_logEnabled)
     {
-        Serial0.printf("Tarefa de sincronização iniciada\n");
+        // Serial0.printf("Tarefa de sincronização iniciada\n");
     }
 }
 
@@ -401,7 +401,7 @@ bool NTPSync::syncWithServer(NTPServer &server)
     { // Timeout de 10 segundos
         if (_logEnabled)
         {
-            Serial0.printf("Failed to get time from NTP\n");
+            // Serial0.printf("Failed to get time from NTP\n");
         }
         return false;
     }
@@ -413,7 +413,7 @@ bool NTPSync::syncWithServer(NTPServer &server)
     {
         char timeStr[64];
         strftime(timeStr, sizeof(timeStr), "%d/%m/%Y %H:%M:%S", &_timeinfo);
-        Serial0.printf("Time synchronized successfully: %s\n", timeStr);
+        // Serial0.printf("Time synchronized successfully: %s\n", timeStr);
     }
 
     return true;
